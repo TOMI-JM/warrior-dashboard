@@ -1,0 +1,1079 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>VERSIÓN WARRIOR — Sistema de Entrenamiento</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Rajdhani:wght@500;600;700&family=Inter:wght@400;500;600;700&family=Chakra+Petch:wght@500;600;700&display=swap');
+
+:root{
+  --bg: #060b16;
+  --bg-2: #0a1220;
+  --surface: #0d1a2e;
+  --surface-2: #122238;
+  --line: #1c3252;
+  --text: #dce8f7;
+  --text-dim: #7f97b8;
+
+  --orange: #ff7a1f;
+  --orange-glow: #ff9d4d;
+  --cyan: #2fd8f0;
+  --cyan-glow: #7ff0ff;
+  --gold: #ffc93c;
+  --red: #ff4757;
+  --green: #3ef2a0;
+
+  --lvl-base: #6b83a8;
+  --lvl-kaioken: #ff4757;
+  --lvl-ssj: #ffc93c;
+  --lvl-ultra: #7ff0ff;
+
+  --radius: 14px;
+  --shadow: 0 8px 30px rgba(0,0,0,0.45);
+}
+
+*{box-sizing:border-box;}
+html,body{margin:0;padding:0;}
+body{
+  background:
+    radial-gradient(1100px 600px at 15% -10%, rgba(255,122,31,0.10), transparent 60%),
+    radial-gradient(900px 700px at 100% 0%, rgba(47,216,240,0.10), transparent 55%),
+    var(--bg);
+  color:var(--text);
+  font-family:'Inter', sans-serif;
+  min-height:100vh;
+  -webkit-font-smoothing:antialiased;
+}
+h1,h2,h3,.display{
+  font-family:'Rajdhani','Chakra Petch',sans-serif;
+  letter-spacing:0.03em;
+  text-transform:uppercase;
+  font-weight:700;
+}
+::selection{background:var(--orange);color:#060b16;}
+
+button{font-family:inherit;cursor:pointer;}
+button:focus-visible, input:focus-visible, select:focus-visible{
+  outline:2px solid var(--cyan-glow); outline-offset:2px;
+}
+
+.app{max-width:1180px;margin:0 auto;padding:20px 18px 80px;}
+
+/* ---------- HEADER ---------- */
+.topbar{
+  display:flex;align-items:center;justify-content:space-between;
+  gap:16px;flex-wrap:wrap;
+  padding-bottom:18px;margin-bottom:22px;
+  border-bottom:1px solid var(--line);
+}
+.brand{display:flex;align-items:center;gap:14px;}
+.brand-mark{
+  width:44px;height:44px;border-radius:10px;
+  background:conic-gradient(from 220deg, var(--orange), var(--gold), var(--cyan), var(--orange));
+  display:flex;align-items:center;justify-content:center;
+  box-shadow:0 0 24px rgba(255,122,31,0.45);
+  font-size:20px;
+}
+.brand-text .kicker{font-size:11px;color:var(--text-dim);letter-spacing:0.25em;font-family:'Rajdhani';font-weight:600;}
+.brand-text h1{font-size:22px;margin:0;line-height:1.1;background:linear-gradient(90deg,#fff,var(--orange-glow));-webkit-background-clip:text;background-clip:text;color:transparent;}
+
+.tabs{display:flex;gap:6px;flex-wrap:wrap;}
+.tab-btn{
+  background:var(--surface);border:1px solid var(--line);color:var(--text-dim);
+  padding:9px 16px;border-radius:999px;font-family:'Rajdhani';font-weight:600;
+  font-size:14px;letter-spacing:0.05em;text-transform:uppercase;
+  transition:all .18s ease;
+}
+.tab-btn:hover{color:var(--text);border-color:var(--orange);}
+.tab-btn.active{
+  background:linear-gradient(135deg, rgba(255,122,31,0.22), rgba(47,216,240,0.14));
+  border-color:var(--orange-glow); color:#fff;
+  box-shadow: inset 0 0 0 1px rgba(255,122,31,0.25), 0 0 18px rgba(255,122,31,0.18);
+}
+
+.view{display:none;animation:fadeIn .35s ease;}
+.view.active{display:block;}
+@keyframes fadeIn{from{opacity:0;transform:translateY(6px);}to{opacity:1;transform:translateY(0);}}
+
+/* ---------- CARDS / GRID ---------- */
+.grid{display:grid;gap:16px;}
+.grid-3{grid-template-columns:repeat(3,1fr);}
+.grid-2{grid-template-columns:2fr 1fr;}
+@media (max-width:820px){.grid-3{grid-template-columns:1fr;}.grid-2{grid-template-columns:1fr;}}
+
+.card{
+  background:linear-gradient(180deg, var(--surface), var(--surface-2));
+  border:1px solid var(--line);border-radius:var(--radius);
+  padding:20px;box-shadow:var(--shadow);position:relative;overflow:hidden;
+}
+.card::before{
+  content:"";position:absolute;inset:0;pointer-events:none;
+  background:linear-gradient(135deg, rgba(255,255,255,0.04), transparent 40%);
+}
+.card-label{font-size:11px;letter-spacing:0.18em;color:var(--text-dim);font-family:'Rajdhani';font-weight:600;text-transform:uppercase;margin-bottom:8px;}
+.card-value{font-size:34px;font-family:'Rajdhani';font-weight:700;line-height:1;}
+.card-sub{font-size:12.5px;color:var(--text-dim);margin-top:6px;}
+
+/* ---------- SCOUTER / HERO ---------- */
+.hero{
+  display:grid;grid-template-columns:auto 1fr;gap:28px;align-items:center;
+  background:
+    radial-gradient(400px 260px at 10% 20%, rgba(47,216,240,0.10), transparent 60%),
+    linear-gradient(180deg,var(--surface),var(--surface-2));
+  border:1px solid var(--line);border-radius:var(--radius);padding:26px;box-shadow:var(--shadow);
+  margin-bottom:18px;
+}
+@media (max-width:720px){.hero{grid-template-columns:1fr;text-align:center;justify-items:center;}}
+
+.scouter{position:relative;width:180px;height:180px;flex:none;}
+.scouter svg{width:100%;height:100%;transform:rotate(-90deg);}
+.scouter-ring-bg{fill:none;stroke:rgba(255,255,255,0.06);stroke-width:10;}
+.scouter-ring{fill:none;stroke-width:10;stroke-linecap:round;transition:stroke-dashoffset 1s cubic-bezier(.2,.8,.2,1), stroke .4s;
+  filter:drop-shadow(0 0 8px currentColor);}
+.scouter-center{
+  position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;
+}
+.scouter-pct{font-family:'Rajdhani';font-weight:700;font-size:36px;line-height:1;}
+.scouter-tag{font-size:10px;letter-spacing:0.2em;color:var(--text-dim);text-transform:uppercase;margin-top:4px;}
+
+.hero-info .lvl-name{font-size:28px;margin:0 0 4px;}
+.hero-info .lvl-quote{color:var(--text-dim);font-size:14px;font-style:italic;max-width:520px;}
+.lvl-bar-wrap{margin-top:14px;height:10px;background:rgba(255,255,255,0.06);border-radius:99px;overflow:hidden;max-width:520px;}
+.lvl-bar-fill{height:100%;border-radius:99px;transition:width .8s ease;box-shadow:0 0 12px currentColor;}
+.lvl-bar-caption{font-size:11.5px;color:var(--text-dim);margin-top:6px;}
+
+/* ---------- MISSION TABLE ---------- */
+.cal-controls{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:16px;}
+.select, .btn{
+  background:var(--surface-2);border:1px solid var(--line);color:var(--text);
+  padding:9px 14px;border-radius:9px;font-size:13.5px;font-family:'Inter';
+}
+.btn{font-family:'Rajdhani';font-weight:600;letter-spacing:0.04em;text-transform:uppercase;transition:.15s;}
+.btn.primary{background:linear-gradient(135deg,var(--orange),#ff9d4d);color:#0b0b0b;border:none;}
+.btn.primary:hover{filter:brightness(1.08);}
+.btn.ghost:hover{border-color:var(--orange);color:#fff;}
+.btn.danger:hover{border-color:var(--red);color:var(--red);}
+
+.table-scroll{overflow-x:auto;border:1px solid var(--line);border-radius:var(--radius);background:var(--surface);}
+table.missions{border-collapse:collapse;width:100%;font-size:12.5px;}
+table.missions th, table.missions td{padding:0;text-align:center;}
+table.missions thead th{
+  padding:10px 4px;color:var(--text-dim);font-family:'Rajdhani';font-weight:600;font-size:11.5px;
+  border-bottom:1px solid var(--line);position:sticky;top:0;background:var(--surface);z-index:2;
+}
+table.missions .habit-col{
+  text-align:left;padding:10px 14px;min-width:220px;position:sticky;left:0;background:var(--surface);z-index:3;
+  border-right:1px solid var(--line);
+}
+.habit-name{font-weight:600;font-size:13.5px;}
+.habit-energy{font-size:10.5px;color:var(--text-dim);text-transform:uppercase;letter-spacing:0.08em;margin-top:2px;}
+.energy-dot{display:inline-block;width:7px;height:7px;border-radius:50%;margin-right:5px;}
+.e-alta{background:var(--orange);} .e-media{background:var(--cyan);} .e-baja{background:var(--green);}
+
+td.day-cell{width:34px;min-width:34px;padding:6px 0;border-right:1px dashed rgba(255,255,255,0.03);}
+.chk{
+  width:22px;height:22px;border-radius:6px;border:1.5px solid var(--line);background:var(--bg-2);
+  margin:0 auto;display:flex;align-items:center;justify-content:center;transition:all .15s ease;position:relative;
+}
+.chk:hover{border-color:var(--orange);}
+.chk.done{background:linear-gradient(135deg,var(--orange),var(--gold));border-color:var(--orange);box-shadow:0 0 10px rgba(255,122,31,0.55);}
+.chk.done::after{content:"✓";font-size:13px;color:#0b0b0b;font-weight:800;}
+.chk.pop{animation:pop .4s ease;}
+@keyframes pop{0%{transform:scale(1);}40%{transform:scale(1.5);}100%{transform:scale(1);}}
+
+.today-col{background:rgba(47,216,240,0.06);}
+tr.total-row td{border-top:2px solid var(--line);font-family:'Rajdhani';font-weight:700;padding-top:10px;}
+.tot-cell{padding:10px 6px;font-size:13px;color:var(--text-dim);}
+.tot-cell b{color:var(--text);}
+
+/* full-day glow row highlight */
+.day-complete-badge{
+  display:inline-flex;align-items:center;gap:4px;font-size:10px;color:var(--gold);
+}
+
+/* ---------- ENERGY GUIDE ---------- */
+.energy-guide{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:18px;}
+@media(max-width:820px){.energy-guide{grid-template-columns:1fr;}}
+.energy-card{border-radius:12px;padding:14px 16px;border:1px solid var(--line);background:var(--surface);}
+.energy-card h3{font-size:13px;margin:0 0 6px;display:flex;align-items:center;gap:8px;}
+.energy-card p{margin:0;font-size:12px;color:var(--text-dim);line-height:1.5;}
+.energy-card.alta{border-left:3px solid var(--orange);}
+.energy-card.media{border-left:3px solid var(--cyan);}
+.energy-card.baja{border-left:3px solid var(--green);}
+
+/* ---------- STATS ---------- */
+.bars{display:flex;align-items:flex-end;gap:4px;height:160px;padding:10px 4px 0;overflow-x:auto;}
+.bar{
+  flex:1;min-width:14px;background:linear-gradient(180deg,var(--cyan),rgba(47,216,240,0.15));
+  border-radius:4px 4px 0 0;position:relative;transition:height .5s ease;
+}
+.bar.best{background:linear-gradient(180deg,var(--gold),rgba(255,201,60,0.15));}
+.bar.today{background:linear-gradient(180deg,var(--orange),rgba(255,122,31,0.2));}
+.bar-labels{display:flex;gap:4px;padding:6px 4px 0;font-size:9.5px;color:var(--text-dim);}
+.bar-labels span{flex:1;min-width:14px;text-align:center;}
+
+.hbar-row{display:grid;grid-template-columns:180px 1fr 46px;align-items:center;gap:10px;margin-bottom:10px;}
+.hbar-track{height:10px;background:rgba(255,255,255,0.06);border-radius:99px;overflow:hidden;}
+.hbar-fill{height:100%;border-radius:99px;background:linear-gradient(90deg,var(--orange),var(--gold));}
+.hbar-label{font-size:12.5px;color:var(--text-dim);}
+.hbar-pct{font-size:12px;text-align:right;font-family:'Rajdhani';font-weight:600;}
+
+.stat-mini{display:flex;justify-content:space-between;padding:9px 0;border-bottom:1px solid var(--line);font-size:13px;}
+.stat-mini:last-child{border-bottom:none;}
+.stat-mini b{font-family:'Rajdhani';font-weight:700;}
+
+/* ---------- ACHIEVEMENTS ---------- */
+.ach-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:14px;}
+.ach{
+  border:1px solid var(--line);border-radius:var(--radius);padding:18px;text-align:center;
+  background:var(--surface);position:relative;transition:transform .2s ease;
+}
+.ach.unlocked{border-color:var(--gold);box-shadow:0 0 22px rgba(255,201,60,0.18);}
+.ach.unlocked:hover{transform:translateY(-3px);}
+.ach-icon{font-size:34px;margin-bottom:10px;filter:grayscale(1) opacity(0.35);}
+.ach.unlocked .ach-icon{filter:none;}
+.ach-name{font-family:'Rajdhani';font-weight:700;font-size:14.5px;text-transform:uppercase;letter-spacing:0.03em;}
+.ach-desc{font-size:11.5px;color:var(--text-dim);margin-top:6px;line-height:1.4;}
+.ach-status{margin-top:10px;font-size:10px;letter-spacing:0.15em;text-transform:uppercase;color:var(--text-dim);}
+.ach.unlocked .ach-status{color:var(--gold);}
+
+/* ---------- MOTIVATION ---------- */
+.motiv{
+  margin-top:16px;padding:14px 18px;border-radius:12px;border:1px dashed var(--line);
+  font-style:italic;color:var(--text);font-size:14px;background:rgba(255,255,255,0.02);
+}
+
+/* ---------- SETTINGS ---------- */
+.settings-row{display:flex;justify-content:space-between;align-items:center;padding:14px 0;border-bottom:1px solid var(--line);gap:16px;flex-wrap:wrap;}
+.settings-row:last-child{border-bottom:none;}
+.settings-title{font-weight:600;font-size:14px;}
+.settings-desc{font-size:12px;color:var(--text-dim);margin-top:3px;max-width:460px;}
+
+/* ---------- AURA / LEVEL-UP OVERLAY ---------- */
+#auraOverlay{
+  position:fixed;inset:0;display:none;align-items:center;justify-content:center;z-index:999;
+  background:radial-gradient(circle at center, rgba(6,11,22,0.2), rgba(6,11,22,0.85));
+  animation:auraFade 1.6s ease forwards;
+}
+@keyframes auraFade{0%{opacity:0;}10%{opacity:1;}80%{opacity:1;}100%{opacity:0;}}
+.aura-content{text-align:center;}
+.aura-ring{
+  width:150px;height:150px;border-radius:50%;margin:0 auto 18px;
+  border:4px solid var(--gold);box-shadow:0 0 60px 10px var(--gold), inset 0 0 40px var(--gold);
+  animation:auraPulse 1s ease-in-out infinite alternate;
+}
+@keyframes auraPulse{from{transform:scale(0.9);}to{transform:scale(1.08);}}
+.aura-title{font-family:'Rajdhani';font-size:30px;font-weight:700;color:#fff;text-shadow:0 0 20px var(--gold);}
+.aura-sub{color:var(--text-dim);margin-top:6px;}
+
+.particle{position:fixed;border-radius:50%;pointer-events:none;z-index:998;}
+
+@media (prefers-reduced-motion: reduce){
+  *{animation-duration:0.01ms !important; transition-duration:0.01ms !important;}
+}
+
+.footer-note{text-align:center;color:var(--text-dim);font-size:11.5px;margin-top:26px;}
+</style>
+</head>
+<body>
+
+<div class="app">
+
+  <div class="topbar">
+    <div class="brand">
+      <div class="brand-mark">⚡</div>
+      <div class="brand-text">
+        <div class="kicker">Sistema de Entrenamiento</div>
+        <h1>Versión Warrior</h1>
+      </div>
+    </div>
+    <div class="tabs" id="tabs">
+      <button class="tab-btn active" data-view="dashboard">🏠 Dashboard</button>
+      <button class="tab-btn" data-view="calendar">📅 Misiones</button>
+      <button class="tab-btn" data-view="stats">📡 Scouter</button>
+      <button class="tab-btn" data-view="achievements">🏆 Logros</button>
+      <button class="tab-btn" data-view="settings">⚙️ Config</button>
+    </div>
+  </div>
+
+  <!-- DASHBOARD -->
+  <div class="view active" id="view-dashboard">
+    <div class="hero">
+      <div class="scouter">
+        <svg viewBox="0 0 180 180">
+          <circle class="scouter-ring-bg" cx="90" cy="90" r="78"></circle>
+          <circle class="scouter-ring" id="scouterRing" cx="90" cy="90" r="78" stroke="var(--orange)"
+            stroke-dasharray="490" stroke-dashoffset="490"></circle>
+        </svg>
+        <div class="scouter-center">
+          <div class="scouter-pct" id="scouterPct">0%</div>
+          <div class="scouter-tag">Cumplimiento</div>
+        </div>
+      </div>
+      <div class="hero-info">
+        <h2 class="lvl-name" id="lvlName">Guerrero Base</h2>
+        <div class="lvl-quote" id="lvlQuote">"Incluso Goku tuvo que comenzar desde cero. Completa una misión."</div>
+        <div class="lvl-bar-wrap"><div class="lvl-bar-fill" id="lvlBarFill" style="width:0%"></div></div>
+        <div class="lvl-bar-caption" id="lvlBarCaption">0% hacia el siguiente nivel</div>
+      </div>
+    </div>
+
+    <div class="grid grid-3" style="margin-bottom:16px;">
+      <div class="card">
+        <div class="card-label">Misiones Totales</div>
+        <div class="card-value" id="kpiMissions">0 / 0</div>
+        <div class="card-sub" id="kpiMissionsSub">Completadas este mes</div>
+      </div>
+      <div class="card">
+        <div class="card-label">🔥 Racha Actual</div>
+        <div class="card-value" id="kpiStreak">0 días</div>
+        <div class="card-sub" id="kpiBestStreak">🏆 Mejor racha: 0 días</div>
+      </div>
+      <div class="card">
+        <div class="card-label">⚡ Poder Total Acumulado</div>
+        <div class="card-value" id="kpiPower">0</div>
+        <div class="card-sub">XP ganado en el mes</div>
+      </div>
+    </div>
+
+    <div class="motiv" id="motivBox">Cargando mensaje de entrenamiento...</div>
+  </div>
+
+  <!-- CALENDAR -->
+  <div class="view" id="view-calendar">
+    <div class="cal-controls">
+      <select class="select" id="monthSelect"></select>
+      <button class="btn ghost" id="markTodayBtn">Marcar todo hoy ✓</button>
+      <span style="color:var(--text-dim);font-size:12px;margin-left:auto;" id="calSummary"></span>
+    </div>
+
+    <div class="energy-guide">
+      <div class="energy-card alta"><h3><span class="energy-dot e-alta"></span>Energía Alta</h3><p>Misiones que exigen concentración profunda: Programación, Cálculo, Tarea Genkidama.</p></div>
+      <div class="energy-card media"><h3><span class="energy-dot e-media"></span>Energía Media</h3><p>Actividad productiva moderada: Lectura, Inglés técnico, Organización.</p></div>
+      <div class="energy-card baja"><h3><span class="energy-dot e-baja"></span>Energía Baja</h3><p>Misiones simples pero importantes: ordenar el entorno, planificar mañana.</p></div>
+    </div>
+
+    <div class="table-scroll">
+      <table class="missions" id="missionsTable"></table>
+    </div>
+  </div>
+
+  <!-- STATS -->
+  <div class="view" id="view-stats">
+    <div class="grid grid-2" style="align-items:start;">
+      <div class="card">
+        <div class="card-label">📈 Misiones completadas por día</div>
+        <div class="bars" id="dailyBars"></div>
+        <div class="bar-labels" id="dailyBarLabels"></div>
+      </div>
+      <div class="card">
+        <div class="card-label">Resumen del mes</div>
+        <div class="stat-mini"><span>Promedio diario</span><b id="statAvg">0</b></div>
+        <div class="stat-mini"><span>Día más productivo</span><b id="statBestDay">—</b></div>
+        <div class="stat-mini"><span>Día menos productivo</span><b id="statWorstDay">—</b></div>
+        <div class="stat-mini"><span>Total completado</span><b id="statTotal">0</b></div>
+        <div class="stat-mini"><span>Consistencia global</span><b id="statConsistency">0%</b></div>
+      </div>
+    </div>
+
+    <div class="card" style="margin-top:16px;">
+      <div class="card-label">Cumplimiento por hábito</div>
+      <div id="habitBars" style="margin-top:12px;"></div>
+    </div>
+  </div>
+
+  <!-- ACHIEVEMENTS -->
+  <div class="view" id="view-achievements">
+    <div class="ach-grid" id="achGrid"></div>
+  </div>
+
+  <!-- SETTINGS -->
+  <div class="view" id="view-settings">
+    <div class="card">
+      <div class="settings-row">
+        <div>
+          <div class="settings-title">Almacenamiento local</div>
+          <div class="settings-desc">Todo tu progreso (misiones, estadísticas, rachas, nivel, XP) se guarda automáticamente en tiempo real en este navegador usando <code>localStorage</code>. Si abres la app en otro navegador o dispositivo, usa el backup JSON para llevarte tus datos.</div>
+        </div>
+        <span id="storageStatus" style="font-size:12px;color:var(--text-dim);">Guardado ✓</span>
+      </div>
+      <div class="settings-row">
+        <div>
+          <div class="settings-title">Exportar copia de seguridad (JSON)</div>
+          <div class="settings-desc">Descarga un archivo .json con todo tu progreso: meses, hábitos, rachas y logros desbloqueados.</div>
+        </div>
+        <button class="btn ghost" id="exportBtn">⬇ Exportar backup</button>
+      </div>
+      <div class="settings-row">
+        <div>
+          <div class="settings-title">Importar copia de seguridad (JSON)</div>
+          <div class="settings-desc">Restaura tu progreso desde un archivo .json exportado previamente. Esto reemplazará los datos actuales guardados en este navegador.</div>
+        </div>
+        <div>
+          <input type="file" id="importInput" accept="application/json" style="display:none;">
+          <button class="btn ghost" id="importBtn">⬆ Importar backup</button>
+        </div>
+      </div>
+      <div class="settings-row">
+        <div>
+          <div class="settings-title">Reiniciar mes actual</div>
+          <div class="settings-desc">Borra todas las misiones marcadas del mes seleccionado. Esta acción no se puede deshacer.</div>
+        </div>
+        <button class="btn danger" id="resetMonthBtn">Reiniciar mes</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="footer-note">Entrena todos los días. Sube de nivel. Alcanza el Instinto Superior.</div>
+</div>
+
+<div id="auraOverlay">
+  <div class="aura-content">
+    <div class="aura-ring"></div>
+    <div class="aura-title" id="auraTitle">¡NUEVO NIVEL!</div>
+    <div class="aura-sub" id="auraSub">Has despertado un nuevo poder.</div>
+  </div>
+</div>
+
+<script>
+(function(){
+  "use strict";
+
+  /* ---------------- CONFIG ---------------- */
+  const HABITS = [
+    { id:'genkidama', icon:'🌟', name:'Tarea Genkidama', energy:'alta', priority:true },
+    { id:'programacion', icon:'💻', name:'Programación (Java)', energy:'alta' },
+    { id:'calculo', icon:'🧮', name:'Cálculo 1', energy:'alta' },
+    { id:'dopamina', icon:'🧠', name:'Reto de Retención de Dopamina', energy:'alta' },
+    { id:'fisico', icon:'💪', name:'Entrenamiento Físico', energy:'media' },
+    { id:'alimentacion', icon:'🍽️', name:'Alimentación & Proteína', energy:'media' },
+    { id:'lectura', icon:'📚', name:'Lectura / Inglés Técnico', energy:'media' },
+    { id:'entorno', icon:'🧹', name:'Entorno Cero Fricción', energy:'baja' },
+    { id:'planificacion', icon:'🗓️', name:'Planificación del Día Siguiente', energy:'baja' },
+  ];
+
+  const LEVELS = [
+    { key:'base',   min:0,  max:49,  name:'Guerrero Base',   color:'var(--lvl-base)',
+      quote:'"Incluso Goku tuvo que comenzar desde cero. Completa una misión."' },
+    { key:'kaioken', min:50, max:74,  name:'Kaioken',         color:'var(--lvl-kaioken)',
+      quote:'"Tu poder está aumentando. No detengas el entrenamiento."' },
+    { key:'ssj',     min:75, max:89,  name:'Super Saiyajin',  color:'var(--lvl-ssj)',
+      quote:'"Tu disciplina está alcanzando un nuevo nivel."' },
+    { key:'ultra',   min:90, max:100, name:'Ultra Instinto',  color:'var(--lvl-ultra)',
+      quote:'"La acción se vuelve automática. Has alcanzado un nuevo estado."' },
+  ];
+
+  const ACHIEVEMENTS = [
+    { id:'disciplinado', icon:'🥉', name:'Guerrero Disciplinado', desc:'Completa 10 misiones en el mes.',
+      check: s => s.totalDone >= 10 },
+    { id:'kaioken_ach', icon:'🥈', name:'Entrenamiento Kaioken', desc:'Logra 5 días consecutivos con todo completado.',
+      check: s => s.bestStreak >= 5 },
+    { id:'ssj_ach', icon:'🥇', name:'Super Saiyajin', desc:'Alcanza un cumplimiento mensual superior al 75%.',
+      check: s => s.pct >= 75 },
+    { id:'ultra_ach', icon:'⚡', name:'Ultra Instinto', desc:'Alcanza un cumplimiento superior al 90%.',
+      check: s => s.pct >= 90 },
+    { id:'genkidama_ach', icon:'🌟', name:'Genkidama', desc:'Completa la misión principal 7 días seguidos.',
+      check: s => s.genkidamaStreak >= 7 },
+  ];
+
+  const STORAGE_PREFIX = 'warrior:';
+
+  /* ---------------- STATE ---------------- */
+  const now = new Date();
+  let state = {
+    monthKey: monthKeyFor(now),
+    data: {}, // monthKey -> { habitId: [bool,...] }
+  };
+  let unlockedAchievements = {}; // achId -> true, tracked separately (persists across months)
+  let storageOk = true;
+
+  function monthKeyFor(d){
+    return d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0');
+  }
+  function daysInMonth(monthKey){
+    const [y,m] = monthKey.split('-').map(Number);
+    return new Date(y, m, 0).getDate();
+  }
+  function isCurrentMonth(monthKey){
+    return monthKey === monthKeyFor(new Date());
+  }
+  function todayDate(){
+    return new Date().getDate();
+  }
+
+  function emptyGrid(monthKey){
+    const days = daysInMonth(monthKey);
+    const grid = {};
+    HABITS.forEach(h => { grid[h.id] = new Array(days).fill(false); });
+    return grid;
+  }
+
+  function getGrid(monthKey){
+    if(!state.data[monthKey]){
+      state.data[monthKey] = emptyGrid(monthKey);
+    }
+    return state.data[monthKey];
+  }
+
+  /* ---------------- PERSISTENCE (localStorage, tiempo real) ---------------- */
+  const LS_MONTH_PREFIX = STORAGE_PREFIX + 'month:';
+  const LS_ACH_KEY = STORAGE_PREFIX + 'achievements';
+  const LS_INDEX_KEY = STORAGE_PREFIX + 'index'; // list of known month keys, for quick discovery
+
+  function lsAvailable(){
+    try{
+      const t = '__warrior_test__';
+      localStorage.setItem(t, '1');
+      localStorage.removeItem(t);
+      return true;
+    }catch(e){ return false; }
+  }
+
+  function loadAll(){
+    if(!lsAvailable()){
+      storageOk = false;
+      console.error('localStorage no está disponible en este contexto.');
+      return;
+    }
+    try{
+      let index = [];
+      try{ index = JSON.parse(localStorage.getItem(LS_INDEX_KEY) || '[]'); }catch(e){ index = []; }
+
+      // also scan raw keys in case index got out of sync
+      const foundKeys = new Set(index);
+      for(let i=0; i<localStorage.length; i++){
+        const k = localStorage.key(i);
+        if(k && k.startsWith(LS_MONTH_PREFIX)){
+          foundKeys.add(k.replace(LS_MONTH_PREFIX, ''));
+        }
+      }
+
+      foundKeys.forEach(monthKey => {
+        try{
+          const raw = localStorage.getItem(LS_MONTH_PREFIX + monthKey);
+          if(raw) state.data[monthKey] = JSON.parse(raw);
+        }catch(e){ /* skip corrupted entry */ }
+      });
+
+      try{
+        const achRaw = localStorage.getItem(LS_ACH_KEY);
+        if(achRaw) unlockedAchievements = JSON.parse(achRaw);
+      }catch(e){ unlockedAchievements = {}; }
+
+      storageOk = true;
+    }catch(e){
+      storageOk = false;
+      console.error('Error leyendo localStorage', e);
+    }
+  }
+
+  function saveMonth(monthKey){
+    try{
+      localStorage.setItem(LS_MONTH_PREFIX + monthKey, JSON.stringify(state.data[monthKey]));
+      let index = [];
+      try{ index = JSON.parse(localStorage.getItem(LS_INDEX_KEY) || '[]'); }catch(e){ index = []; }
+      if(!index.includes(monthKey)){
+        index.push(monthKey);
+        localStorage.setItem(LS_INDEX_KEY, JSON.stringify(index));
+      }
+      storageOk = true;
+    }catch(e){
+      storageOk = false;
+      console.error('Error guardando en localStorage', e);
+    }
+    updateStorageStatus();
+  }
+
+  function saveAchievements(){
+    try{
+      localStorage.setItem(LS_ACH_KEY, JSON.stringify(unlockedAchievements));
+      storageOk = true;
+    }catch(e){
+      storageOk = false;
+      console.error('Error guardando logros', e);
+    }
+    updateStorageStatus();
+  }
+
+  function updateStorageStatus(){
+    const el = document.getElementById('storageStatus');
+    if(el) el.textContent = storageOk ? 'Guardado ✓' : 'Error al guardar ⚠';
+  }
+
+  /* ---------------- EXPORT / IMPORT BACKUP (JSON) ---------------- */
+  function buildBackupObject(){
+    return {
+      app: 'version-warrior',
+      version: 1,
+      exportedAt: new Date().toISOString(),
+      data: state.data,
+      achievements: unlockedAchievements,
+    };
+  }
+
+  function exportBackup(){
+    const backup = buildBackupObject();
+    const blob = new Blob([JSON.stringify(backup, null, 2)], { type:'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    const stamp = new Date().toISOString().slice(0,10);
+    a.href = url;
+    a.download = `warrior-backup-${stamp}.json`;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    setTimeout(()=>URL.revokeObjectURL(url), 2000);
+  }
+
+  function importBackupFile(file){
+    const reader = new FileReader();
+    reader.onload = () => {
+      let parsed;
+      try{
+        parsed = JSON.parse(reader.result);
+      }catch(e){
+        alert('El archivo no es un JSON válido.');
+        return;
+      }
+      if(!parsed || typeof parsed !== 'object' || !parsed.data){
+        alert('El archivo no tiene el formato esperado de un backup de Versión Warrior.');
+        return;
+      }
+      if(!confirm('Esto reemplazará todo tu progreso guardado en este navegador con el contenido del backup. ¿Continuar?')) return;
+
+      state.data = parsed.data || {};
+      unlockedAchievements = parsed.achievements || {};
+
+      // persist everything from the import into localStorage
+      try{
+        localStorage.setItem(LS_INDEX_KEY, JSON.stringify(Object.keys(state.data)));
+        Object.keys(state.data).forEach(monthKey => {
+          localStorage.setItem(LS_MONTH_PREFIX + monthKey, JSON.stringify(state.data[monthKey]));
+        });
+        localStorage.setItem(LS_ACH_KEY, JSON.stringify(unlockedAchievements));
+        storageOk = true;
+      }catch(e){
+        storageOk = false;
+        console.error('Error restaurando backup', e);
+      }
+      updateStorageStatus();
+
+      if(!state.data[state.monthKey]) getGrid(state.monthKey);
+      prevLevelKey = levelFor(computeStats(state.monthKey).pct).key; // avoid aura firing right after import
+      renderAll();
+      alert('Backup restaurado correctamente.');
+    };
+    reader.onerror = () => alert('No se pudo leer el archivo.');
+    reader.readAsText(file);
+  }
+
+  /* ---------------- STATS CALC ---------------- */
+  function computeStats(monthKey){
+    const grid = getGrid(monthKey);
+    const days = daysInMonth(monthKey);
+    const lastDay = isCurrentMonth(monthKey) ? Math.min(todayDate(), days) : days;
+
+    let totalDone = 0;
+    const totalPossible = HABITS.length * days;
+
+    const perHabit = {};
+    HABITS.forEach(h => perHabit[h.id] = 0);
+
+    const perDay = new Array(days).fill(0);
+
+    for(const h of HABITS){
+      const arr = grid[h.id] || new Array(days).fill(false);
+      for(let d=0; d<days; d++){
+        if(arr[d]){
+          totalDone++;
+          perHabit[h.id]++;
+          perDay[d]++;
+        }
+      }
+    }
+
+    const pct = totalPossible ? Math.round((totalDone/totalPossible)*100) : 0;
+
+    // streaks: a day counts as "full" if all habits done
+    const fullDay = new Array(days).fill(false);
+    for(let d=0; d<days; d++){
+      fullDay[d] = HABITS.every(h => (grid[h.id] || [])[d]);
+    }
+    let bestStreak = 0, run = 0;
+    for(let d=0; d<days; d++){
+      if(fullDay[d]){ run++; bestStreak = Math.max(bestStreak, run); }
+      else run = 0;
+    }
+    // current streak: consecutive full days ending at lastDay-1 (0-indexed) going backwards
+    let currentStreak = 0;
+    for(let d=lastDay-1; d>=0; d--){
+      if(fullDay[d]) currentStreak++;
+      else break;
+    }
+
+    // genkidama streak (consecutive days genkidama completed, ending at lastDay)
+    const gArr = grid['genkidama'] || [];
+    let genkidamaStreak = 0;
+    for(let d=lastDay-1; d>=0; d--){
+      if(gArr[d]) genkidamaStreak++;
+      else break;
+    }
+    let genkidamaBest = 0, gRun = 0;
+    for(let d=0; d<days; d++){
+      if(gArr[d]){ gRun++; genkidamaBest = Math.max(genkidamaBest, gRun); }
+      else gRun = 0;
+    }
+    genkidamaStreak = Math.max(genkidamaStreak, genkidamaBest); // for achievement purposes use best ever reached
+
+    // best/worst day (only consider days up to lastDay that have any tracked data)
+    let bestDay = -1, worstDay = -1, bestVal = -1, worstVal = Infinity;
+    for(let d=0; d<lastDay; d++){
+      if(perDay[d] > bestVal){ bestVal = perDay[d]; bestDay = d; }
+      if(perDay[d] < worstVal){ worstVal = perDay[d]; worstDay = d; }
+    }
+
+    const avg = lastDay ? (perDay.slice(0,lastDay).reduce((a,b)=>a+b,0) / lastDay) : 0;
+
+    // XP / power
+    let power = totalDone*10;
+    power += perDay.filter((v,i)=> i<lastDay && v===HABITS.length).length * 50; // full day bonus
+    power += (grid['genkidama']||[]).slice(0,lastDay).filter(Boolean).length * 20; // genkidama bonus
+    power += currentStreak * 5;
+
+    return {
+      days, lastDay, totalDone, totalPossible, pct, perHabit, perDay,
+      bestStreak, currentStreak, genkidamaStreak,
+      bestDay, worstDay, bestVal, worstVal, avg, power, fullDay
+    };
+  }
+
+  function levelFor(pct){
+    return LEVELS.find(l => pct >= l.min && pct <= l.max) || LEVELS[0];
+  }
+
+  function motivationalMessage(pct, isUltra){
+    if(isUltra) return LEVELS[3].quote;
+    if(pct >= 75) return LEVELS[2].quote;
+    if(pct >= 50) return LEVELS[1].quote;
+    return LEVELS[0].quote;
+  }
+
+  /* ---------------- RENDER: MONTH SELECT ---------------- */
+  function monthLabel(monthKey){
+    const [y,m] = monthKey.split('-').map(Number);
+    const d = new Date(y, m-1, 1);
+    return d.toLocaleDateString('es-ES', { month:'long', year:'numeric' });
+  }
+
+  function renderMonthSelect(){
+    const sel = document.getElementById('monthSelect');
+    const keys = new Set(Object.keys(state.data));
+    keys.add(state.monthKey);
+    const sorted = Array.from(keys).sort();
+    sel.innerHTML = sorted.map(k =>
+      `<option value="${k}" ${k===state.monthKey?'selected':''}>${capitalize(monthLabel(k))}</option>`
+    ).join('');
+  }
+  function capitalize(s){ return s.charAt(0).toUpperCase()+s.slice(1); }
+
+  /* ---------------- RENDER: DASHBOARD ---------------- */
+  let prevLevelKey = null;
+
+  function renderDashboard(){
+    const stats = computeStats(state.monthKey);
+    const level = levelFor(stats.pct);
+
+    // scouter ring
+    const ring = document.getElementById('scouterRing');
+    const circumference = 2*Math.PI*78;
+    const offset = circumference - (stats.pct/100)*circumference;
+    ring.style.strokeDasharray = circumference.toFixed(1);
+    ring.style.strokeDashoffset = offset.toFixed(1);
+    ring.style.stroke = level.color;
+    document.getElementById('scouterPct').textContent = stats.pct + '%';
+    document.getElementById('scouterPct').style.color = level.color;
+
+    document.getElementById('lvlName').textContent = level.name;
+    document.getElementById('lvlName').style.color = level.color;
+    document.getElementById('lvlQuote').textContent = motivationalMessage(stats.pct, level.key==='ultra');
+
+    const span = level.max - level.min + 1;
+    const within = Math.min(100, Math.max(0, ((stats.pct - level.min)/span)*100));
+    document.getElementById('lvlBarFill').style.width = within + '%';
+    document.getElementById('lvlBarFill').style.background = level.color;
+    document.getElementById('lvlBarFill').style.color = level.color;
+    const nextLevel = LEVELS[LEVELS.indexOf(level)+1];
+    document.getElementById('lvlBarCaption').textContent = nextLevel
+      ? `${stats.pct}% — faltan ${Math.max(0,nextLevel.min-stats.pct)}% para ${nextLevel.name}`
+      : `${stats.pct}% — nivel máximo alcanzado`;
+
+    document.getElementById('kpiMissions').textContent = `${stats.totalDone} / ${stats.totalPossible}`;
+    document.getElementById('kpiMissionsSub').textContent = `${stats.pct}% de cumplimiento global`;
+    document.getElementById('kpiStreak').textContent = `${stats.currentStreak} día${stats.currentStreak===1?'':'s'}`;
+    document.getElementById('kpiBestStreak').textContent = `🏆 Mejor racha: ${stats.bestStreak} día${stats.bestStreak===1?'':'s'}`;
+    document.getElementById('kpiPower').textContent = stats.power.toLocaleString('es-ES');
+
+    document.getElementById('motivBox').textContent = motivationalMessage(stats.pct, level.key==='ultra');
+
+    // level up detection (only for current month, avoid firing on first load)
+    if(prevLevelKey && prevLevelKey !== level.key && LEVELS.findIndex(l=>l.key===level.key) > LEVELS.findIndex(l=>l.key===prevLevelKey)){
+      triggerAura(level);
+    }
+    prevLevelKey = level.key;
+
+    checkAchievements(stats);
+  }
+
+  /* ---------------- RENDER: CALENDAR TABLE ---------------- */
+  function renderCalendar(){
+    renderMonthSelect();
+    const grid = getGrid(state.monthKey);
+    const days = daysInMonth(state.monthKey);
+    const todayD = isCurrentMonth(state.monthKey) ? todayDate() : -1;
+    const stats = computeStats(state.monthKey);
+
+    let html = '<thead><tr><th class="habit-col">Misión</th>';
+    for(let d=1; d<=days; d++){
+      html += `<th class="${d===todayD?'today-col':''}">${d}</th>`;
+    }
+    html += '<th style="min-width:56px;">Total</th><th style="min-width:50px;">%</th></tr></thead><tbody>';
+
+    for(const h of HABITS){
+      const arr = grid[h.id];
+      const done = arr.filter(Boolean).length;
+      const pct = Math.round((done/days)*100);
+      html += `<tr>
+        <td class="habit-col">
+          <div class="habit-name">${h.icon} ${h.name}</div>
+          <div class="habit-energy"><span class="energy-dot e-${h.energy}"></span>${h.energy}</div>
+        </td>`;
+      for(let d=0; d<days; d++){
+        const isToday = (d+1)===todayD;
+        html += `<td class="day-cell ${isToday?'today-col':''}">
+          <div class="chk ${arr[d]?'done':''}" data-habit="${h.id}" data-day="${d}" role="button" tabindex="0" aria-label="${h.name} día ${d+1}"></div>
+        </td>`;
+      }
+      html += `<td class="tot-cell"><b>${done}</b>/${days}</td><td class="tot-cell"><b>${pct}%</b></td></tr>`;
+    }
+
+    // total row
+    html += '<tr class="total-row"><td class="habit-col">Total del día</td>';
+    for(let d=0; d<days; d++){
+      const c = stats.perDay[d];
+      const full = c === HABITS.length;
+      html += `<td class="tot-cell">${c}${full?'<div class="day-complete-badge">✦</div>':''}</td>`;
+    }
+    html += `<td class="tot-cell"><b>${stats.totalDone}</b></td><td class="tot-cell"><b>${stats.pct}%</b></td></tr>`;
+
+    html += '</tbody>';
+    document.getElementById('missionsTable').innerHTML = html;
+    document.getElementById('calSummary').textContent = `${stats.totalDone}/${stats.totalPossible} misiones · ${stats.pct}% de cumplimiento`;
+
+    document.querySelectorAll('.chk').forEach(el => {
+      el.addEventListener('click', onToggleCell);
+      el.addEventListener('keydown', e => { if(e.key==='Enter'||e.key===' '){ e.preventDefault(); onToggleCell.call(el, e);} });
+    });
+  }
+
+  async function onToggleCell(e){
+    const habitId = this.dataset.habit;
+    const day = parseInt(this.dataset.day, 10);
+    const grid = getGrid(state.monthKey);
+    const newVal = !grid[habitId][day];
+    grid[habitId][day] = newVal;
+
+    this.classList.toggle('done', newVal);
+    if(newVal){
+      this.classList.add('pop');
+      setTimeout(()=>this.classList.remove('pop'), 400);
+      spawnParticles(this);
+    }
+
+    await saveMonth(state.monthKey);
+    renderCalendar();
+    renderDashboard();
+    renderStats();
+    renderAchievements();
+
+    // full-day celebration
+    const stats = computeStats(state.monthKey);
+    const dayIsToday = isCurrentMonth(state.monthKey) && (day+1)===todayDate();
+    if(newVal && dayIsToday && stats.fullDay[day]){
+      triggerFullDayAura();
+    }
+  }
+
+  function markAllToday(){
+    if(!isCurrentMonth(state.monthKey)) return;
+    const grid = getGrid(state.monthKey);
+    const d = todayDate()-1;
+    HABITS.forEach(h => grid[h.id][d] = true);
+    saveMonth(state.monthKey);
+    renderCalendar(); renderDashboard(); renderStats(); renderAchievements();
+    triggerFullDayAura();
+  }
+
+  /* ---------------- PARTICLES / AURA ---------------- */
+  function spawnParticles(el){
+    const rect = el.getBoundingClientRect();
+    const colors = ['#ff7a1f','#ffc93c','#2fd8f0'];
+    for(let i=0;i<10;i++){
+      const p = document.createElement('div');
+      p.className = 'particle';
+      const size = 4 + Math.random()*4;
+      p.style.width = size+'px'; p.style.height = size+'px';
+      p.style.left = (rect.left+rect.width/2)+'px';
+      p.style.top = (rect.top+rect.height/2)+'px';
+      p.style.background = colors[i%colors.length];
+      p.style.boxShadow = '0 0 8px '+colors[i%colors.length];
+      document.body.appendChild(p);
+      const angle = Math.random()*Math.PI*2;
+      const dist = 30+Math.random()*40;
+      const dx = Math.cos(angle)*dist, dy = Math.sin(angle)*dist;
+      p.animate([
+        { transform:'translate(0,0)', opacity:1 },
+        { transform:`translate(${dx}px, ${dy}px)`, opacity:0 }
+      ], { duration:600+Math.random()*300, easing:'ease-out' }).onfinish = () => p.remove();
+    }
+  }
+
+  function triggerFullDayAura(){
+    const overlay = document.getElementById('auraOverlay');
+    document.getElementById('auraTitle').textContent = '¡DÍA COMPLETADO!';
+    document.getElementById('auraSub').textContent = 'Todas las misiones cumplidas. Tu aura de poder crece.';
+    document.querySelector('.aura-ring').style.borderColor = 'var(--orange)';
+    document.querySelector('.aura-ring').style.boxShadow = '0 0 60px 10px var(--orange), inset 0 0 40px var(--orange)';
+    showOverlay(overlay);
+  }
+  function triggerAura(level){
+    const overlay = document.getElementById('auraOverlay');
+    document.getElementById('auraTitle').textContent = '¡NUEVO NIVEL: ' + level.name.toUpperCase() + '!';
+    document.getElementById('auraSub').textContent = 'Tu poder ha evolucionado a un nuevo estado.';
+    document.querySelector('.aura-ring').style.borderColor = level.color;
+    document.querySelector('.aura-ring').style.boxShadow = `0 0 60px 10px ${level.color}, inset 0 0 40px ${level.color}`;
+    showOverlay(overlay);
+  }
+  function showOverlay(overlay){
+    overlay.style.display = 'flex';
+    overlay.style.animation = 'none';
+    void overlay.offsetWidth;
+    overlay.style.animation = 'auraFade 1.8s ease forwards';
+    setTimeout(()=>{ overlay.style.display='none'; }, 1800);
+  }
+
+  /* ---------------- RENDER: STATS ---------------- */
+  function renderStats(){
+    const stats = computeStats(state.monthKey);
+    const barsEl = document.getElementById('dailyBars');
+    const labelsEl = document.getElementById('dailyBarLabels');
+    const maxVal = HABITS.length;
+
+    barsEl.innerHTML = stats.perDay.map((v,i) => {
+      const h = Math.max(4, (v/maxVal)*140);
+      let cls = 'bar';
+      if(i === stats.bestDay && v>0) cls += ' best';
+      if(isCurrentMonth(state.monthKey) && (i+1)===todayDate()) cls += ' today';
+      return `<div class="${cls}" style="height:${h}px" title="Día ${i+1}: ${v} misiones"></div>`;
+    }).join('');
+    labelsEl.innerHTML = stats.perDay.map((v,i)=> ((i+1)%5===0||i===0) ? `<span>${i+1}</span>` : `<span></span>`).join('');
+
+    document.getElementById('statAvg').textContent = stats.avg.toFixed(1);
+    document.getElementById('statBestDay').textContent = stats.bestDay>=0 ? `Día ${stats.bestDay+1} (${stats.bestVal})` : '—';
+    document.getElementById('statWorstDay').textContent = stats.worstDay>=0 ? `Día ${stats.worstDay+1} (${stats.worstVal===Infinity?0:stats.worstVal})` : '—';
+    document.getElementById('statTotal').textContent = stats.totalDone;
+    document.getElementById('statConsistency').textContent = stats.pct + '%';
+
+    const habitBarsEl = document.getElementById('habitBars');
+    habitBarsEl.innerHTML = HABITS.map(h => {
+      const done = stats.perHabit[h.id];
+      const pct = Math.round((done/stats.days)*100);
+      return `<div class="hbar-row">
+        <div class="hbar-label">${h.icon} ${h.name}</div>
+        <div class="hbar-track"><div class="hbar-fill" style="width:${pct}%"></div></div>
+        <div class="hbar-pct">${pct}%</div>
+      </div>`;
+    }).join('');
+  }
+
+  /* ---------------- RENDER: ACHIEVEMENTS ---------------- */
+  function checkAchievements(stats){
+    let changed = false;
+    ACHIEVEMENTS.forEach(a => {
+      if(!unlockedAchievements[a.id] && a.check(stats)){
+        unlockedAchievements[a.id] = true;
+        changed = true;
+      }
+    });
+    if(changed) saveAchievements();
+  }
+
+  function renderAchievements(){
+    const el = document.getElementById('achGrid');
+    el.innerHTML = ACHIEVEMENTS.map(a => {
+      const unlocked = !!unlockedAchievements[a.id];
+      return `<div class="ach ${unlocked?'unlocked':''}">
+        <div class="ach-icon">${a.icon}</div>
+        <div class="ach-name">${a.name}</div>
+        <div class="ach-desc">${a.desc}</div>
+        <div class="ach-status">${unlocked?'Desbloqueado':'Bloqueado'}</div>
+      </div>`;
+    }).join('');
+  }
+
+  /* ---------------- SETTINGS ---------------- */
+  async function resetMonth(){
+    if(!confirm('¿Seguro que quieres reiniciar todas las misiones de este mes? Esta acción no se puede deshacer.')) return;
+    state.data[state.monthKey] = emptyGrid(state.monthKey);
+    await saveMonth(state.monthKey);
+    renderAll();
+  }
+
+  /* ---------------- TABS ---------------- */
+  function setupTabs(){
+    document.querySelectorAll('.tab-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
+        document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));
+        btn.classList.add('active');
+        document.getElementById('view-'+btn.dataset.view).classList.add('active');
+      });
+    });
+  }
+
+  /* ---------------- INIT ---------------- */
+  function renderAll(){
+    renderDashboard();
+    renderCalendar();
+    renderStats();
+    renderAchievements();
+  }
+
+  async function init(){
+    setupTabs();
+    document.getElementById('monthSelect').addEventListener('change', (e) => {
+      state.monthKey = e.target.value;
+      renderAll();
+    });
+    document.getElementById('markTodayBtn').addEventListener('click', markAllToday);
+    document.getElementById('resetMonthBtn').addEventListener('click', resetMonth);
+    document.getElementById('exportBtn').addEventListener('click', exportBackup);
+    document.getElementById('importBtn').addEventListener('click', () => document.getElementById('importInput').click());
+    document.getElementById('importInput').addEventListener('change', (e) => {
+      const file = e.target.files && e.target.files[0];
+      if(file) importBackupFile(file);
+      e.target.value = ''; // allow re-importing the same file later
+    });
+
+    loadAll();
+    getGrid(state.monthKey);
+    prevLevelKey = levelFor(computeStats(state.monthKey).pct).key; // avoid firing aura on load
+    renderAll();
+    updateStorageStatus();
+  }
+
+  init();
+})();
+</script>
+</body>
+</html>
